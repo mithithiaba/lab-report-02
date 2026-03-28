@@ -1,0 +1,75 @@
+import heapq
+
+def heuristic(r, c, tr, tc):
+    return abs(r - tr) + abs(c - tc)
+
+def astar(grid, start, target, R, C):
+    sr, sc = start
+    tr, tc = target
+
+    pq = []
+    heapq.heappush(pq, (heuristic(sr, sc, tr, tc), 0, sr, sc))  # (f, g, r, c)
+
+    parent = {}
+    cost = {(sr, sc): 0}
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    while pq:
+        f, g, r, c = heapq.heappop(pq)
+
+        if (r, c) == (tr, tc):
+            path = []
+            cur = (tr, tc)
+            while cur in parent:
+                path.append(cur)
+                cur = parent[cur]
+            path.append((sr, sc))
+            path.reverse()
+            return g, path
+
+        for dr, dc in directions:
+            nr, nc = r + dr, c + dc
+
+            if 0 <= nr < R and 0 <= nc < C and grid[nr][nc] == 0:
+                new_g = g + 1
+
+                if (nr, nc) not in cost or new_g < cost[(nr, nc)]:
+                    cost[(nr, nc)] = new_g
+                    parent[(nr, nc)] = (r, c)
+                    h = heuristic(nr, nc, tr, tc)
+                    new_f = new_g + h
+                    heapq.heappush(pq, (new_f, new_g, nr, nc))
+
+    return -1, []
+
+try:
+    with open("input.txt", "r") as file:
+        first_line = file.readline().strip()
+        if not first_line:
+            print("input.txt is empty or first line is blank!")
+            exit()
+
+        R, C = map(int, first_line.split())
+
+        grid = []
+        for _ in range(R):
+            row = list(map(int, file.readline().split()))
+            grid.append(row)
+
+        sr, sc = map(int, file.readline().split())
+        tr, tc = map(int, file.readline().split())
+
+except FileNotFoundError:
+    print("input.txt file not found!")
+    exit()
+except ValueError:
+    print("Invalid input format in input.txt!")
+    exit()
+
+cost, path = astar(grid, (sr, sc), (tr, tc), R, C)
+
+if cost == -1:
+    print("Path not found using A*")
+else:
+    print(f"Path found with cost {cost} using A*")
+    print("Shortest Path:", path)
